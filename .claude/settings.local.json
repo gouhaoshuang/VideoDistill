@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(. \"$PROFILE\")",
+      "Bash(conda config:*)",
+      "Bash(powershell.exe -Command \"New-Item -ItemType Directory -Force -Path ''D:\\\\code\\\\VideoDistill\\\\doc'',''D:\\\\code\\\\VideoDistill\\\\src'',''D:\\\\code\\\\VideoDistill\\\\outputs'' | Out-Null; Get-ChildItem ''D:\\\\code\\\\VideoDistill'' | Select-Object Name\")",
+      "Bash(powershell.exe -Command \"New-Item -ItemType File -Force -Path ''D:\\\\code\\\\VideoDistill\\\\src\\\\__init__.py'' | Out-Null; Write-Host ''Files created''\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem ''C:\\\\Users\\\\tianyi\\\\Downloads\\\\'' -Filter ''*Claude*'' | Select-Object Name, Length\")"
+    ],
+    "additionalDirectories": [
+      "D:\\code\\VideoDistill\\doc"
+    ]
+  }
+}
