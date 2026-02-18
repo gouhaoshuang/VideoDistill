@@ -4,7 +4,8 @@
         {
             "label": "Streamlit Run",
             "type": "shell",
-            "command": "D:\\develop\\miniconda\\Scripts\\activate.bat && streamlit run main.py",
+            "command": "D:\\develop\\miniconda\\Scripts\\conda.exe",
+            "args": ["run", "-n", "videodistill", "streamlit", "run", "main.py"],
             "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
@@ -15,14 +16,16 @@
         {
             "label": "Run Tests",
             "type": "shell",
-            "command": "D:\\develop\\miniconda\\Scripts\\activate.bat && python tests/simple_test.py --test api",
+            "command": "D:\\develop\\miniconda\\Scripts\\conda.exe",
+            "args": ["run", "-n", "videodistill", "python", "tests/simple_test.py", "--test", "api"],
             "problemMatcher": [],
             "group": "test"
         },
         {
             "label": "Run Video Test",
             "type": "shell",
-            "command": "D:\\develop\\miniconda\\Scripts\\activate.bat && python tests/simple_test.py --test video",
+            "command": "D:\\develop\\miniconda\\Scripts\\conda.exe",
+            "args": ["run", "-n", "videodistill", "python", "tests/simple_test.py", "--test", "video"],
             "problemMatcher": [],
             "group": "test"
         }
