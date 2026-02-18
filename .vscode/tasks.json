@@ -4,8 +4,7 @@
         {
             "label": "Streamlit Run",
             "type": "shell",
-            "command": "D:\\develop\\miniconda\\Scripts\\conda.exe",
-            "args": ["run", "-n", "videodistill", "streamlit", "run", "main.py"],
+            "command": "./run.bat",
             "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
@@ -14,7 +13,7 @@
             "group": "build"
         },
         {
-            "label": "Run Tests",
+            "label": "Run API Test",
             "type": "shell",
             "command": "D:\\develop\\miniconda\\Scripts\\conda.exe",
             "args": ["run", "-n", "videodistill", "python", "tests/simple_test.py", "--test", "api"],
