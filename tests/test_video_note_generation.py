@@ -34,9 +34,13 @@ def test_video_note_generation():
     print(f"\n📹 视频文件: {os.path.basename(video_path)}")
     print(f"   文件大小: {os.path.getsize(video_path) / 1024 / 1024:.2f} MB")
 
-    # API Key
-    api_key = os.getenv("GOOGLE_API_KEY", "AIzaSyAAamFsC_TahLyPPlK5gnZF_m1bFkaY0m4")
-    print(f"\n🔑 API Key: {api_key[:20]}...{api_key[-10:]}")
+    # API Key - 从环境变量获取，不再使用硬编码
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        print("\n❌ 错误: 未设置 GOOGLE_API_KEY 环境变量")
+        print("   请设置: set GOOGLE_API_KEY=your_api_key_here")
+        return False
+    print(f"\n🔑 API Key: {api_key[:15]}...{api_key[-6:]}")
 
     try:
         # 初始化客户端
@@ -127,7 +131,12 @@ def test_simple_api_call():
     print("VideoDistill - API 连接测试")
     print("=" * 60)
 
-    api_key = os.getenv("GOOGLE_API_KEY", "AIzaSyAAamFsC_TahLyPPlK5gnZF_m1bFkaY0m4")
+    # API Key - 从环境变量获取，不再使用硬编码
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        print("\n❌ 错误: 未设置 GOOGLE_API_KEY 环境变量")
+        print("   请设置: set GOOGLE_API_KEY=your_api_key_here")
+        return False
 
     try:
         client = GeminiClient(api_key=api_key)
