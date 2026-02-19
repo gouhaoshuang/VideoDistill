@@ -1,0 +1,16 @@
+{
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+  "black-formatter.path": [
+    "${env.CONDA_PREFIX}\\Scripts\\black.exe"
+  ],
+  "isort.args": ["--profile", "black"],
+  "python.linting.enabled": true,
+  "python.linting.ruffEnabled": true,
+  "python.analysis.typeCheckingMode": "basic"
+}

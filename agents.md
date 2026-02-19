@@ -119,3 +119,5 @@ VideoDistill/
 - 单文件最大 2GB
 - 遇到 429 错误使用指数退避重试
 ```
+
+当前项目使用 conda activate videodistll 激活对应python环境
