@@ -30,11 +30,14 @@ outputs/
 !outputs/.gitkeep
 
 
-# Testing
+# Testing (根目录下的会被重定向到 tests/.temp)
 .pytest_cache/
 htmlcov/
 .coverage
 coverage.xml
+# 但保留 tests/.temp 目录结构
+!tests/.temp/
+!tests/.temp/.gitkeep
 
 # OS
 .DS_Store
