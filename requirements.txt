@@ -1,6 +1,5 @@
 google-genai
 streamlit
-python-dotenv
-black 
-isort 
+black
+isort
 ruff
