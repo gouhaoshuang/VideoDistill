@@ -15,6 +15,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from src.gemini_client import GeminiClient
 from src.note_generator import NoteGenerator
+from src.file_utils import VideoFileManager
+from config import DEFAULT_MODEL, AVAILABLE_MODELS, ENABLE_CACHE
 
 # 页面配置
 st.set_page_config(
@@ -77,9 +79,18 @@ with st.sidebar:
     # 模型选择
     model_option = st.selectbox(
         "AI 模型",
-        ["gemini-2.0-flash", "gemini-1.5-flash"],
+        AVAILABLE_MODELS,
         index=0,
         help="选择用于生成笔记的 AI 模型"
+    )
+
+    st.markdown("---")
+
+    # 缓存开关
+    enable_cache = st.checkbox(
+        "启用缓存",
+        value=ENABLE_CACHE,
+        help="启用后，已生成的笔记会被缓存，支持断点续传"
     )
 
     st.markdown("---")
@@ -154,20 +165,34 @@ with col2:
         st.info("👈 请先上传视频文件")
     else:
         if st.button("🚀 开始生成", type="primary", use_container_width=True):
-            # 保存临时文件
-            temp_dir = Path("temp")
-            temp_dir.mkdir(exist_ok=True)
-            temp_path = temp_dir / f"temp_{uploaded_file.name}"
-
-            with open(temp_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-
             try:
-                # 初始化客户端
+                # 初始化客户端和文件管理器
                 os.environ["GOOGLE_API_KEY"] = api_key_input
                 client = GeminiClient(api_key=api_key_input)
                 client.model = model_option
-                generator = NoteGenerator(client)
+
+                # 使用hash避免重复拷贝
+                temp_dir = Path("temp")
+                temp_dir.mkdir(exist_ok=True)
+                file_manager = VideoFileManager()
+                temp_path = file_manager.get_temp_video_path(
+                    uploaded_file.name,
+                    temp_dir=str(temp_dir)
+                )
+
+                # 只有当临时文件不存在时才拷贝
+                if not temp_path.exists():
+                    with open(temp_path, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+                    st.info(f"📁 视频已缓存: {temp_path.name}")
+                else:
+                    st.info(f"✅ 使用已缓存的视频文件")
+
+                generator = NoteGenerator(
+                    client,
+                    file_manager=file_manager,
+                    enable_cache=enable_cache
+                )
 
                 # 进度条容器
                 progress_container = st.container()
@@ -191,6 +216,8 @@ with col2:
                     status_text.text("正在生成笔记...")
                     notes = generator.generate_all_notes(
                         video_file,
+                        video_path=str(temp_path),
+                        original_name=uploaded_file.name,
                         progress_callback=progress_callback
                     )
 

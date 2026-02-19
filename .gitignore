@@ -26,7 +26,7 @@ my-envs/
 
 # Project specific
 temp/
-outputs/*.md
+outputs/
 !outputs/.gitkeep
 
 # OS
