@@ -9,6 +9,13 @@ AVAILABLE_MODELS = [
     "gemini-3-flash-preview"
 ]
 
+# 笔记生成模式配置
+GENERATION_MODES = {
+    "segmented": "分段生成（适合长视频）",
+    "direct": "直接生成（适合短视频）"
+}
+DEFAULT_GENERATION_MODE = "segmented"
+
 # 文件存储配置
 TEMP_DIR = "temp"
 OUTPUT_DIR = "outputs"

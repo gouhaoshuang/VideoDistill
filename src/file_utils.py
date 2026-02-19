@@ -115,6 +115,20 @@ class VideoFileManager:
                 continue
         return sorted(cached)
 
+    def save_direct_note(self, video_dir: Path, note: str):
+        """保存直接生成的笔记"""
+        direct_note_file = video_dir / "direct_note.md"
+        with open(direct_note_file, 'w', encoding='utf-8') as f:
+            f.write(note)
+
+    def load_direct_note(self, video_dir: Path) -> Optional[str]:
+        """从缓存加载直接生成的笔记"""
+        direct_note_file = video_dir / "direct_note.md"
+        if direct_note_file.exists():
+            with open(direct_note_file, 'r', encoding='utf-8') as f:
+                return f.read()
+        return None
+
     def save_final_notes(self, video_dir: Path, notes: str):
         """保存最终合并的笔记"""
         notes_file = video_dir / "final_notes.md"

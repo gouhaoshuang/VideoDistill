@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from src.gemini_client import GeminiClient
 from src.note_generator import NoteGenerator
 from src.file_utils import VideoFileManager
-from config import DEFAULT_MODEL, AVAILABLE_MODELS, ENABLE_CACHE
+from config import DEFAULT_MODEL, AVAILABLE_MODELS, ENABLE_CACHE, GENERATION_MODES, DEFAULT_GENERATION_MODE
 
 # 页面配置
 st.set_page_config(
@@ -86,6 +86,33 @@ with st.sidebar:
 
     st.markdown("---")
 
+    # 生成模式选择
+    generation_mode = st.selectbox(
+        "生成模式",
+        options=list(GENERATION_MODES.keys()),
+        format_func=lambda x: GENERATION_MODES[x],
+        index=list(GENERATION_MODES.keys()).index(DEFAULT_GENERATION_MODE),
+        help="选择笔记生成方式：分段生成适合长视频，直接生成适合短视频"
+    )
+
+    # 根据选择的模式显示说明
+    if generation_mode == "segmented":
+        st.info("""
+        📚 **分段生成模式**
+        - 先生成大纲，再逐段生成笔记
+        - 适合长视频、结构化内容
+        - 支持断点续传
+        """)
+    else:
+        st.info("""
+        ⚡ **直接生成模式**
+        - 一次性生成完整笔记
+        - 适合短视频、快速笔记
+        - 速度更快
+        """)
+
+    st.markdown("---")
+
     # 缓存开关
     enable_cache = st.checkbox(
         "启用缓存",
@@ -98,14 +125,19 @@ with st.sidebar:
     # 使用说明
     st.subheader("📖 使用说明")
     st.markdown("""
-    1. 上传视频文件
-    2. 点击"开始生成"
-    3. 等待 AI 分析
-    4. 预览或下载笔记
+    1. 选择生成模式（分段/直接）
+    2. 上传视频文件
+    3. 点击"开始生成"
+    4. 等待 AI 分析
+    5. 预览或下载笔记
 
-    **支持格式**: MP4, MOV, AVI, MKV
+    **支持格式**: MP4, MOV, AVI, MKV, WEBM
 
     **文件限制**: 最大 2GB
+
+    **模式建议**:
+    - 长视频（>10分钟）→ 分段生成
+    - 短视频（<10分钟）→ 直接生成
     """)
 
     st.markdown("---")
@@ -218,6 +250,7 @@ with col2:
                         video_file,
                         video_path=str(temp_path),
                         original_name=uploaded_file.name,
+                        mode=generation_mode,
                         progress_callback=progress_callback
                     )
 

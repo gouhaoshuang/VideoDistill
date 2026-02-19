@@ -31,6 +31,10 @@ class PromptLoader:
         return self.load_prompt("segment_prompt")
 
     @property
+    def direct_prompt(self) -> str:
+        return self.load_prompt("direct_prompt")
+
+    @property
     def system_instruction(self) -> str:
         return self.load_prompt("system_instruction")
 
@@ -45,10 +49,14 @@ def get_outline_prompt() -> str:
 def get_segment_prompt() -> str:
     return _loader.segment_prompt
 
+def get_direct_prompt() -> str:
+    return _loader.direct_prompt
+
 def get_system_instruction() -> str:
     return _loader.system_instruction
 
 # 向后兼容：旧代码可以直接使用的常量
 OUTLINE_PROMPT = get_outline_prompt()
 SEGMENT_PROMPT = get_segment_prompt()
+DIRECT_PROMPT = get_direct_prompt()
 SYSTEM_INSTRUCTION = get_system_instruction()

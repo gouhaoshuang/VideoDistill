@@ -3,6 +3,7 @@
 
 负责视频大纲生成、大纲解析、笔记生成和合并的核心逻辑。
 支持缓存和断点续传功能。
+支持分段生成和直接生成两种模式。
 """
 
 from typing import List, Dict, Optional, Callable
@@ -11,6 +12,7 @@ from .gemini_client import GeminiClient
 from .prompt_templates import (
     OUTLINE_PROMPT,
     SEGMENT_PROMPT,
+    DIRECT_PROMPT,
     SYSTEM_INSTRUCTION
 )
 from .file_utils import VideoFileManager
@@ -19,6 +21,10 @@ from .outline_parser import OutlineParser
 
 class NoteGenerator:
     """视频笔记生成器，支持缓存和断点续传"""
+
+    # 生成模式枚举
+    MODE_SEGMENTED = "segmented"  # 分段生成（适合长视频）
+    MODE_DIRECT = "direct"        # 直接生成（适合短视频）
 
     def __init__(
         self,
@@ -115,6 +121,26 @@ class NoteGenerator:
 
         return note
 
+    def generate_direct_note(self, video_file) -> str:
+        """
+        直接生成完整笔记（不分段）
+
+        Args:
+            video_file: 上传的视频文件对象
+
+        Returns:
+            完整的笔记文本
+        """
+        print("正在直接生成笔记...")
+        note = self.client.generate_content(
+            DIRECT_PROMPT,
+            file=video_file,
+            system_instruction=SYSTEM_INSTRUCTION,
+            temperature=0.6
+        )
+        print("笔记生成完成")
+        return note
+
     def merge_notes(self, segment_notes: List[str], segments: List[Dict]) -> str:
         """
         合并所有分段笔记（直接拼接，添加章节标题）
@@ -145,6 +171,7 @@ class NoteGenerator:
         video_file,
         video_path: str,
         original_name: str,
+        mode: str = MODE_SEGMENTED,
         progress_callback: Optional[Callable] = None
     ) -> str:
         """
@@ -154,6 +181,7 @@ class NoteGenerator:
             video_file: 上传的视频文件对象
             video_path: 视频文件路径
             original_name: 原始文件名
+            mode: 生成模式 ("segmented" 或 "direct")
             progress_callback: 进度回调函数，接收 (current, total, message)
 
         Returns:
@@ -162,6 +190,74 @@ class NoteGenerator:
         # 获取视频输出目录
         self.current_video_dir = self.file_manager.get_video_dir(video_path, original_name)
 
+        def report_progress(current: int, total: int, message: str):
+            if progress_callback:
+                progress_callback(current, total, message)
+
+        # 根据模式选择不同的生成流程
+        if mode == self.MODE_DIRECT:
+            return self._generate_direct_mode(video_file, progress_callback)
+        else:
+            return self._generate_segmented_mode(video_file, video_path, original_name, progress_callback)
+
+    def _generate_direct_mode(
+        self,
+        video_file,
+        progress_callback: Optional[Callable] = None
+    ) -> str:
+        """
+        直接生成模式
+
+        Args:
+            video_file: 上传的视频文件对象
+            progress_callback: 进度回调函数
+
+        Returns:
+            完整的 Markdown 笔记
+        """
+        def report_progress(current: int, total: int, message: str):
+            if progress_callback:
+                progress_callback(current, total, message)
+
+        # 1. 检查并加载/生成笔记
+        if self.enable_cache:
+            cached_note = self.file_manager.load_direct_note(self.current_video_dir)
+            if cached_note:
+                report_progress(100, 100, "✅ 从缓存加载笔记...")
+                return cached_note
+
+        # 2. 生成笔记
+        report_progress(1, 3, "正在分析视频生成笔记...")
+        note = self.generate_direct_note(video_file)
+
+        # 3. 保存笔记
+        report_progress(2, 3, "正在保存笔记...")
+        self.file_manager.save_direct_note(self.current_video_dir, note)
+        self.file_manager.save_final_notes(self.current_video_dir, note)
+
+        report_progress(100, 100, "✅ 笔记生成完成！")
+
+        return note
+
+    def _generate_segmented_mode(
+        self,
+        video_file,
+        video_path: str,
+        original_name: str,
+        progress_callback: Optional[Callable] = None
+    ) -> str:
+        """
+        分段生成模式
+
+        Args:
+            video_file: 上传的视频文件对象
+            video_path: 视频文件路径
+            original_name: 原始文件名
+            progress_callback: 进度回调函数
+
+        Returns:
+            完整的 Markdown 笔记
+        """
         def report_progress(current: int, total: int, message: str):
             if progress_callback:
                 progress_callback(current, total, message)
