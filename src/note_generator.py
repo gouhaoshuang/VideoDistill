@@ -1,23 +1,20 @@
 """
 笔记生成器
 
-负责视频大纲生成、分段解析、笔记生成和合并的核心逻辑。
+负责视频大纲生成、大纲解析、笔记生成和合并的核心逻辑。
 支持缓存和断点续传功能。
 """
 
-import json
-import re
 from typing import List, Dict, Optional, Callable
 from pathlib import Path
 from .gemini_client import GeminiClient
 from .prompt_templates import (
     OUTLINE_PROMPT,
-    PARSE_SEGMENTS_PROMPT,
-    SEGMENT_NOTE_PROMPT,
-    MERGE_NOTES_PROMPT,
+    SEGMENT_PROMPT,
     SYSTEM_INSTRUCTION
 )
 from .file_utils import VideoFileManager
+from .outline_parser import OutlineParser
 
 
 class NoteGenerator:
@@ -42,6 +39,7 @@ class NoteGenerator:
         self.client = gemini_client
         self.file_manager = file_manager or VideoFileManager(output_dir)
         self.enable_cache = enable_cache
+        self.outline_parser = OutlineParser()
         self.current_video_dir = None
         self.current_outline = None
         self.current_segments = None
@@ -54,7 +52,7 @@ class NoteGenerator:
             video_file: 上传的视频文件对象
 
         Returns:
-            视频大纲文本
+            视频大纲文本（Markdown格式）
         """
         print("正在生成视频大纲...")
         outline = self.client.generate_content(
@@ -66,45 +64,24 @@ class NoteGenerator:
         print("大纲生成完成")
         return outline
 
-    def parse_segments(self, outline: str) -> List[Dict]:
+    def parse_outline_to_segments(self, outline: str) -> List[Dict]:
         """
         解析大纲为结构化分段列表
 
         Args:
-            outline: 视频大纲文本
+            outline: 视频大纲文本（Markdown格式）
 
         Returns:
-            分段列表，每个分段包含 id, title, description 等字段
+            分段列表，每个分段包含 id, title, description 字段
         """
         print("正在解析分段...")
 
-        prompt = PARSE_SEGMENTS_PROMPT.format(outline=outline)
-        response = self.client.generate_content(
-            prompt,
-            system_instruction=SYSTEM_INSTRUCTION,
-            temperature=0.3
-        )
+        # 使用 OutlineParser 解析大纲
+        result = self.outline_parser.parse(outline)
+        segments = self.outline_parser.to_segment_list(result)
 
-        # 尝试解析 JSON
-        try:
-            # 提取 JSON 部分（处理可能的前后文字）
-            json_match = re.search(r'\[.*\]', response, re.DOTALL)
-            if json_match:
-                segments = json.loads(json_match.group())
-            else:
-                segments = json.loads(response)
-            print(f"解析出 {len(segments)} 个分段")
-            return segments
-        except json.JSONDecodeError as e:
-            print(f"JSON 解析失败: {e}")
-            print(f"原始响应: {response}")
-            # 如果解析失败，返回单个分段
-            return [{
-                "id": 1,
-                "title": "视频内容",
-                "description": outline,
-                "time_range": None
-            }]
+        print(f"解析出 {len(segments)} 个分段")
+        return segments
 
     def generate_segment_note(
         self,
@@ -116,14 +93,14 @@ class NoteGenerator:
 
         Args:
             outline: 完整的视频大纲
-            segment: 分段信息字典
+            segment: 分段信息字典，包含 id, title, description
 
         Returns:
             该段落的笔记文本
         """
         print(f"正在生成段落 {segment['id']} 的笔记: {segment['title']}")
 
-        prompt = SEGMENT_NOTE_PROMPT.format(
+        prompt = SEGMENT_PROMPT.format(
             outline=outline,
             segment_id=segment['id'],
             segment_title=segment['title'],
@@ -138,27 +115,28 @@ class NoteGenerator:
 
         return note
 
-    def merge_notes(self, segment_notes: List[str]) -> str:
+    def merge_notes(self, segment_notes: List[str], segments: List[Dict]) -> str:
         """
-        合并所有分段笔记
+        合并所有分段笔记（直接拼接，添加章节标题）
 
         Args:
             segment_notes: 分段笔记列表
+            segments: 分段信息列表
 
         Returns:
             合并后的完整笔记
         """
         print("正在合并笔记...")
 
-        notes_text = "\n\n---\n\n".join(segment_notes)
-        prompt = MERGE_NOTES_PROMPT.format(segments_notes=notes_text)
+        # 直接拼接，添加章节标题
+        merged_parts = []
+        for note, segment in zip(segment_notes, segments):
+            # 添加章节标题
+            chapter_title = f"\n\n## 第{segment['id']}章 {segment['title']}\n\n"
+            merged_parts.append(chapter_title)
+            merged_parts.append(note)
 
-        merged = self.client.generate_content(
-            prompt,
-            system_instruction=SYSTEM_INSTRUCTION,
-            temperature=0.5
-        )
-
+        merged = "".join(merged_parts)
         print("笔记合并完成")
         return merged
 
@@ -205,22 +183,10 @@ class NoteGenerator:
             self.current_outline = outline
             self.file_manager.save_outline(self.current_video_dir, outline)
 
-        # 2. 检查并加载/解析分段
-        if self.enable_cache:
-            cached_segments = self.file_manager.load_segments(self.current_video_dir)
-            if cached_segments:
-                self.current_segments = cached_segments
-                report_progress(2, 5, f"✅ 从缓存加载分段（共{len(cached_segments)}段）...")
-            else:
-                report_progress(2, 5, "正在解析分段...")
-                segments = self.parse_segments(self.current_outline)
-                self.current_segments = segments
-                self.file_manager.save_segments(self.current_video_dir, segments)
-        else:
-            report_progress(2, 5, "正在解析分段...")
-            segments = self.parse_segments(self.current_outline)
-            self.current_segments = segments
-            self.file_manager.save_segments(self.current_video_dir, segments)
+        # 2. 解析大纲为分段（直接解析，不缓存JSON）
+        report_progress(2, 5, "正在解析分段...")
+        segments = self.parse_outline_to_segments(self.current_outline)
+        self.current_segments = segments
 
         # 3. 检查并生成每段笔记（支持断点续传）
         segment_notes = []
@@ -268,7 +234,7 @@ class NoteGenerator:
             "正在合并所有笔记..."
         )
 
-        merged_notes = self.merge_notes(segment_notes)
+        merged_notes = self.merge_notes(segment_notes, self.current_segments)
         self.file_manager.save_final_notes(self.current_video_dir, merged_notes)
 
         report_progress(

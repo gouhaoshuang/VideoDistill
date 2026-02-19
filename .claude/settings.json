@@ -12,7 +12,10 @@
       "Bash(cmd /c \"D:\\\\develop\\\\miniconda\\\\my-envs\\\\videodistill\\\\python.exe -c \"\"import isort; print\\(''isort installed''\\)\"\"\")",
       "Bash(cmd /c \"D:\\\\develop\\\\miniconda\\\\my-envs\\\\videodistill\\\\python.exe -c \"\"import ruff; print\\(''ruff installed''\\)\"\"\")",
       "Bash(\"D:/develop/miniconda/my-envs/videodistill/python.exe\" -c \"import black; print\\(''black OK''\\)\")",
-      "Bash(\"D:/develop/miniconda/my-envs/videodistill/python.exe\":*)"
+      "Bash(\"D:/develop/miniconda/my-envs/videodistill/python.exe\":*)",
+      "Bash(D:/develop/miniconda/my-envs/videodistill/python.exe -m pytest:*)",
+      "Bash(D:/develop/miniconda/my-envs/videodistill/python.exe -m pip install:*)",
+      "Bash(D:/develop/miniconda/my-envs/videodistill/python.exe -m vulture:*)"
     ]
   }
 }

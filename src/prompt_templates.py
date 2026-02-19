@@ -1,7 +1,7 @@
 """
 提示词模板
 
-从文件加载用于视频分析、大纲生成、笔记生成和合并的提示词模板。
+从文件加载用于视频分析、大纲生成、笔记生成的提示词模板。
 """
 
 from pathlib import Path
@@ -27,16 +27,8 @@ class PromptLoader:
         return self.load_prompt("outline_prompt")
 
     @property
-    def parse_segments_prompt(self) -> str:
-        return self.load_prompt("parse_segments_prompt")
-
-    @property
-    def segment_note_prompt(self) -> str:
-        return self.load_prompt("segment_note_prompt")
-
-    @property
-    def merge_notes_prompt(self) -> str:
-        return self.load_prompt("merge_notes_prompt")
+    def segment_prompt(self) -> str:
+        return self.load_prompt("segment_prompt")
 
     @property
     def system_instruction(self) -> str:
@@ -50,21 +42,13 @@ _loader = PromptLoader()
 def get_outline_prompt() -> str:
     return _loader.outline_prompt
 
-def get_parse_segments_prompt() -> str:
-    return _loader.parse_segments_prompt
-
-def get_segment_note_prompt() -> str:
-    return _loader.segment_note_prompt
-
-def get_merge_notes_prompt() -> str:
-    return _loader.merge_notes_prompt
+def get_segment_prompt() -> str:
+    return _loader.segment_prompt
 
 def get_system_instruction() -> str:
     return _loader.system_instruction
 
 # 向后兼容：旧代码可以直接使用的常量
 OUTLINE_PROMPT = get_outline_prompt()
-PARSE_SEGMENTS_PROMPT = get_parse_segments_prompt()
-SEGMENT_NOTE_PROMPT = get_segment_note_prompt()
-MERGE_NOTES_PROMPT = get_merge_notes_prompt()
+SEGMENT_PROMPT = get_segment_prompt()
 SYSTEM_INSTRUCTION = get_system_instruction()

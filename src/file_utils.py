@@ -89,20 +89,6 @@ class VideoFileManager:
                 return f.read()
         return None
 
-    def save_segments(self, video_dir: Path, segments: List[Dict]):
-        """保存分段信息到文件"""
-        segments_file = video_dir / "segments.json"
-        with open(segments_file, 'w', encoding='utf-8') as f:
-            json.dump(segments, f, ensure_ascii=False, indent=2)
-
-    def load_segments(self, video_dir: Path) -> Optional[List[Dict]]:
-        """从缓存加载分段信息"""
-        segments_file = video_dir / "segments.json"
-        if segments_file.exists():
-            with open(segments_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        return None
-
     def save_segment_note(self, video_dir: Path, segment_id: int, note: str):
         """保存单个分段的笔记"""
         segment_file = video_dir / f"segment_{segment_id:02d}.md"
