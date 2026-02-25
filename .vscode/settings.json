@@ -12,5 +12,6 @@
   "isort.args": ["--profile", "black"],
   "python.linting.enabled": true,
   "python.linting.ruffEnabled": true,
-  "python.analysis.typeCheckingMode": "basic"
+  "python.analysis.typeCheckingMode": "basic",
+  "iis.configDir": ""
 }

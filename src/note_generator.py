@@ -221,7 +221,7 @@ class NoteGenerator:
 
         # 1. 检查并加载/生成笔记
         if self.enable_cache:
-            cached_note = self.file_manager.load_direct_note(self.current_video_dir)
+            cached_note = self.file_manager.load_final_notes(self.current_video_dir)
             if cached_note:
                 report_progress(100, 100, "✅ 从缓存加载笔记...")
                 return cached_note
@@ -232,7 +232,6 @@ class NoteGenerator:
 
         # 3. 保存笔记
         report_progress(2, 3, "正在保存笔记...")
-        self.file_manager.save_direct_note(self.current_video_dir, note)
         self.file_manager.save_final_notes(self.current_video_dir, note)
 
         report_progress(100, 100, "✅ 笔记生成完成！")

@@ -25,9 +25,6 @@
 
 ## 🚀 快速开始
 
-### 1. 安装 Miniconda
-
-下载并安装 [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
 
 ### 2. 创建环境
 
