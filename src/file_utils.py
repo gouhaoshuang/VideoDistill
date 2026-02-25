@@ -33,12 +33,20 @@ class VideoFileManager:
 
     def get_video_dir(self, file_path: str, original_name: Optional[str] = None) -> Path:
         """
-        获取视频对应的输出目录
+        获取视频对应的输出目录，同一视频（相同 hash）复用已有目录。
 
-        目录命名格式: YYYYMMDD_HashCode
+        目录命名格式: YYYYMMDD_HHMM_HashCode
         """
         video_hash = self.get_video_hash(file_path)
-        date_str = datetime.now().strftime("%Y%m%d")
+
+        # 先查找已有的同 hash 目录
+        if self.output_dir.exists():
+            for existing in self.output_dir.iterdir():
+                if existing.is_dir() and existing.name.endswith(f"_{video_hash}"):
+                    return existing
+
+        # 没有则新建
+        date_str = datetime.now().strftime("%Y%m%d_%H%M")
         dir_name = f"{date_str}_{video_hash}"
         video_dir = self.output_dir / dir_name
         video_dir.mkdir(parents=True, exist_ok=True)
@@ -52,11 +60,15 @@ class VideoFileManager:
         """保存视频元数据"""
         metadata_file = video_dir / "metadata.json"
 
+        hashed_name = Path(file_path).name
+        display_name = original_name or hashed_name
+
         metadata = {
             "video_hash": self.get_video_hash(file_path),
-            "original_name": original_name or Path(file_path).name,
+            "original_name": display_name,
+            "hashed_name": hashed_name,
             "created_at": datetime.now().isoformat(),
-            "source_path": file_path
+            "source_path": file_path,
         }
 
         with open(metadata_file, 'w', encoding='utf-8') as f:

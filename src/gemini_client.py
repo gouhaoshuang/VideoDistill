@@ -28,21 +28,35 @@ class GeminiClient:
         self.client = genai.Client(api_key=self.api_key)
         self.model = "gemini-2.0-flash"
 
-    def upload_video(self, video_path: str, wait_for_ready: bool = True, timeout: int = 300):
+    def upload_video(self, video_path: str, wait_for_ready: bool = True, timeout: int = 300,
+                     max_retries: int = 3):
         """
-        上传视频文件到 Gemini Files API
+        上传视频文件到 Gemini Files API，失败时指数退避重试。
 
         Args:
             video_path: 视频文件路径
             wait_for_ready: 是否等待文件处理完成
             timeout: 等待超时时间（秒）
+            max_retries: 最大重试次数
 
         Returns:
             上传的文件对象
         """
-        print(f"正在上传视频: {video_path}")
-        file = self.client.files.upload(file=video_path)
-        print(f"文件已上传: {file.name}")
+        last_exc = None
+        for attempt in range(1, max_retries + 1):
+            try:
+                print(f"正在上传视频: {video_path}" + (f" (第{attempt}次)" if attempt > 1 else ""))
+                file = self.client.files.upload(file=video_path)
+                print(f"文件已上传: {file.name}")
+                break
+            except Exception as e:
+                last_exc = e
+                if attempt < max_retries:
+                    wait = 2 ** attempt  # 2, 4, 8 秒
+                    print(f"上传失败（{e}），{wait}s 后重试...")
+                    time.sleep(wait)
+                else:
+                    raise last_exc
 
         if wait_for_ready:
             print("等待文件处理完成...")
@@ -142,18 +156,27 @@ class GeminiClient:
 
             except Exception as e:
                 error_str = str(e)
-                # 检查是否是速率限制错误
-                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                # 可重试的错误：速率限制 或 网络抖动（SSL/连接错误）
+                is_retryable = (
+                    "429" in error_str
+                    or "RESOURCE_EXHAUSTED" in error_str
+                    or "SSL" in error_str
+                    or "ConnectionError" in error_str
+                    or "RemoteDisconnected" in error_str
+                    or "Connection reset" in error_str
+                    or "ReadError" in type(e).__name__
+                    or "ReadError" in error_str
+                    or "httpx" in getattr(type(e), "__module__", "")
+                )
+                if is_retryable:
                     if attempt < max_retries - 1:
-                        # 指数退避：2^attempt 秒
-                        wait_time = min(2 ** attempt, 60)  # 最多等待 60 秒
-                        print(f"  遇到速率限制，等待 {wait_time} 秒后重试... (尝试 {attempt + 1}/{max_retries})")
+                        wait_time = min(2 ** attempt, 60)
+                        print(f"  请求失败（{type(e).__name__}），等待 {wait_time}s 后重试... ({attempt + 1}/{max_retries})")
                         time.sleep(wait_time)
                         continue
                     else:
                         raise Exception(f"达到最大重试次数，请求失败: {error_str}")
                 else:
-                    # 其他错误直接抛出
                     raise
 
     def generate_content_stream(
