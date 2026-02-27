@@ -1,80 +1,130 @@
-# Refactor Clean
+# 重构清理
 
-Safely identify and remove dead code with test verification at every step.
+对指定的代码文件进行安全重构，每步都进行测试验证。
 
-## Step 1: Detect Dead Code
+## 工作流程
 
-Run analysis tools based on project type:
+### 步骤 1：读取项目架构
 
-| Tool | What It Finds | Command |
-|------|--------------|---------|
-| knip | Unused exports, files, dependencies | `npx knip` |
-| depcheck | Unused npm dependencies | `npx depcheck` |
-| ts-prune | Unused TypeScript exports | `npx ts-prune` |
-| vulture | Unused Python code | `vulture src/` |
-| deadcode | Unused Go code | `deadcode ./...` |
-| cargo-udeps | Unused Rust dependencies | `cargo +nightly udeps` |
-
-If no tool is available, use Grep to find exports with zero imports:
-```
-# Find exports, then check if they're imported anywhere
-```
-
-## Step 2: Categorize Findings
-
-Sort findings into safety tiers:
-
-| Tier | Examples | Action |
-|------|----------|--------|
-| **SAFE** | Unused utilities, test helpers, internal functions | Delete with confidence |
-| **CAUTION** | Components, API routes, middleware | Verify no dynamic imports or external consumers |
-| **DANGER** | Config files, entry points, type definitions | Investigate before touching |
-
-## Step 3: Safe Deletion Loop
-
-For each SAFE item:
-
-1. **Run full test suite** — Establish baseline (all green)
-2. **Delete the dead code** — Use Edit tool for surgical removal
-3. **Re-run test suite** — Verify nothing broke
-4. **If tests fail** — Immediately revert with `git checkout -- <file>` and skip this item
-5. **If tests pass** — Move to next item
-
-## Step 4: Handle CAUTION Items
-
-Before deleting CAUTION items:
-- Search for dynamic imports: `import()`, `require()`, `__import__`
-- Search for string references: route names, component names in configs
-- Check if exported from a public package API
-- Verify no external consumers (check dependents if published)
-
-## Step 5: Consolidate Duplicates
-
-After removing dead code, look for:
-- Near-duplicate functions (>80% similar) — merge into one
-- Redundant type definitions — consolidate
-- Wrapper functions that add no value — inline them
-- Re-exports that serve no purpose — remove indirection
-
-## Step 6: Summary
-
-Report results:
+首先读取项目架构文档以了解整体设计：
 
 ```
-Dead Code Cleanup
+读取文件：D:\code\VideoDistill\docs\项目架构.md
+```
+
+### 步骤 2：分析目标文件
+
+读取用户指定的代码文件，分析：
+- 代码结构和职责
+- 与项目架构的关系
+- 可识别的代码异味（重复代码、过长函数、复杂度等）
+- 依赖关系和影响范围
+
+### 步骤 3：制定重构方案
+
+基于项目架构和代码分析，提出重构方案：
+
+**分析维度：**
+| 维度 | 检查项 |
+|------|--------|
+| **职责单一性** | 类/函数是否只做一件事 |
+| **重复代码** | 是否有可提取的公共逻辑 |
+| **命名清晰** | 变量/函数名是否自解释 |
+| **复杂度** | 嵌套层级、圈复杂度 |
+| **可测试性** | 是否便于编写单元测试 |
+| **架构一致性** | 是否符合项目架构设计 |
+
+**重构策略：**
+- **提取方法**：将长函数拆分为小函数
+- **提取类**：将复杂类拆分为多个职责类
+- **内联方法**：移除无意义的包装层
+- **重命名**：改善命名可读性
+- **移动位置**：将代码放到更合适的模块
+- **简化条件**：减少嵌套，使用卫语句
+
+### 步骤 4：展示方案等待确认
+
+向用户展示：
+1. 发现的问题列表
+2. 建议的重构操作
+3. 预期的改进效果
+4. 潜在的风险评估
+
+**等待用户明确确认后再继续**
+
+### 步骤 5：执行重构
+
+用户确认后，按以下顺序执行：
+
+1. **运行测试套件** — 建立基线
+   ```bash
+   pytest -v
+   ```
+
+2. **执行重构操作** — 一次一项，使用 Edit 工具
+
+3. **运行类型检查**
+   ```bash
+   conda run -n videodistill pyright <文件路径>
+   ```
+
+4. **重新运行测试** — 验证没有破坏功能
+   ```bash
+   pytest -v
+   ```
+
+5. **如果测试失败** — 立即回退
+   ```bash
+   git checkout -- <file>
+   ```
+
+6. **如果测试通过** — 继续下一项
+
+### 步骤 6：代码质量检查
+
+重构完成后执行：
+```bash
+# 格式化代码
+black .
+isort .
+
+# 代码检查
+ruff check .
+```
+
+### 步骤 7：总结报告
+
+```
+重构清理报告
 ──────────────────────────────
-Deleted:   12 unused functions
-           3 unused files
-           5 unused dependencies
-Skipped:   2 items (tests failed)
-Saved:     ~450 lines removed
+文件：      <文件路径>
+已执行：   <N> 项重构操作
+  - 提取方法：<N> 个
+  - 重命名：<N> 个
+  - 简化逻辑：<N> 处
+测试：      全部通过 ✅
+类型检查：  通过 ✅
 ──────────────────────────────
-All tests passing ✅
 ```
 
-## Rules
+## 规则
 
-- **Never delete without running tests first**
-- **One deletion at a time** — Atomic changes make rollback easy
-- **Skip if uncertain** — Better to keep dead code than break production
-- **Don't refactor while cleaning** — Separate concerns (clean first, refactor later)
+- **必须先读项目架构** — 理解整体设计再动手
+- **方案需用户确认** — 不确认不执行
+- **一次修改一项** — 原子性变更便于回滚
+- **测试驱动验证** — 每步都运行测试
+- **不确定就跳过** — 保留疑问代码比破坏好
+- **保持架构一致** — 重构不应改变架构设计
+
+## 使用方式
+
+用户在会话中提供：
+```
+/refactor-clean <文件路径>
+```
+
+示例：
+```
+/refactor-clean src/note_generator.py
+/refactor-clean src/batch/batch_processor.py
+```

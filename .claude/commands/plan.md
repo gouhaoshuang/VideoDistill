@@ -1,113 +1,350 @@
 ---
-description: Restate requirements, assess risks, and create step-by-step implementation plan. WAIT for user CONFIRM before touching any code.
+description: 遵循 TDD 工作流创建实施计划。先读项目架构文档，再规划测试优先的实施方案。完成后更新需求文档。
 ---
 
-# Plan Command
+# Plan 命令
 
-This command invokes the **planner** agent to create a comprehensive implementation plan before writing any code.
+此命令结合 **TDD 测试驱动开发** 工作流，在编写任何代码前创建完整的实施计划。
 
-## What This Command Does
+## 命令功能
 
-1. **Restate Requirements** - Clarify what needs to be built
-2. **Identify Risks** - Surface potential issues and blockers
-3. **Create Step Plan** - Break down implementation into phases
-4. **Wait for Confirmation** - MUST receive user approval before proceeding
+1. **读取项目架构** - 了解当前项目结构和模块关系
+2. **重述需求** - 明确需要构建的内容
+3. **识别风险** - 提出潜在问题和阻塞因素
+4. **创建 TDD 步骤计划** - 测试优先的实施顺序
+5. **等待确认** - 必须获得用户批准才能继续
 
-## When to Use
+## 使用场景
 
-Use `/plan` when:
-- Starting a new feature
-- Making significant architectural changes
-- Working on complex refactoring
-- Multiple files/components will be affected
-- Requirements are unclear or ambiguous
+在以下情况使用 `/plan`：
+- 开始新功能开发
+- 进行重大架构变更
+- 处理复杂的重构任务
+- 多个文件/组件会受到影响
+- 需求不明确或含糊不清
 
-## How It Works
-
-The planner agent will:
-
-1. **Analyze the request** and restate requirements in clear terms
-2. **Break down into phases** with specific, actionable steps
-3. **Identify dependencies** between components
-4. **Assess risks** and potential blockers
-5. **Estimate complexity** (High/Medium/Low)
-6. **Present the plan** and WAIT for your explicit confirmation
-
-## Example Usage
+## TDD 工作流程
 
 ```
-User: /plan I need to add real-time notifications when markets resolve
-
-Agent (planner):
-# Implementation Plan: Real-Time Market Resolution Notifications
-
-## Requirements Restatement
-- Send notifications to users when markets they're watching resolve
-- Support multiple notification channels (in-app, email, webhook)
-- Ensure notifications are delivered reliably
-- Include market outcome and user's position result
-
-## Implementation Phases
-
-### Phase 1: Database Schema
-- Add notifications table with columns: id, user_id, market_id, type, status, created_at
-- Add user_notification_preferences table for channel preferences
-- Create indexes on user_id and market_id for performance
-
-### Phase 2: Notification Service
-- Create notification service in lib/notifications.ts
-- Implement notification queue using BullMQ/Redis
-- Add retry logic for failed deliveries
-- Create notification templates
-
-### Phase 3: Integration Points
-- Hook into market resolution logic (when status changes to "resolved")
-- Query all users with positions in market
-- Enqueue notifications for each user
-
-### Phase 4: Frontend Components
-- Create NotificationBell component in header
-- Add NotificationList modal
-- Implement real-time updates via Supabase subscriptions
-- Add notification preferences page
-
-## Dependencies
-- Redis (for queue)
-- Email service (SendGrid/Resend)
-- Supabase real-time subscriptions
-
-## Risks
-- HIGH: Email deliverability (SPF/DKIM required)
-- MEDIUM: Performance with 1000+ users per market
-- MEDIUM: Notification spam if markets resolve frequently
-- LOW: Real-time subscription overhead
-
-## Estimated Complexity: MEDIUM
-- Backend: 4-6 hours
-- Frontend: 3-4 hours
-- Testing: 2-3 hours
-- Total: 9-13 hours
-
-**WAITING FOR CONFIRMATION**: Proceed with this plan? (yes/no/modify)
+                    ┌─────────────────────────────┐
+                    │     用户请求功能实现         │
+                    └──────────────┬──────────────┘
+                                   ▼
+                    ┌─────────────────────────────┐
+                    │   1. 读取项目架构文档        │
+                    │   (docs/项目架构.md)         │
+                    └──────────────┬──────────────┘
+                                   ▼
+                    ┌─────────────────────────────┐
+                    │   2. 分析现有模块和依赖      │
+                    │   - 确定新模块位置           │
+                    │   - 识别需要修改的文件       │
+                    └──────────────┬──────────────┘
+                                   ▼
+                    ┌─────────────────────────────┐
+                    │   3. 创建实施计划（TDD）     │
+                    │   - 先创建测试目录           │
+                    │   - 编写测试文件             │
+                    │   - 实现功能代码             │
+                    │   - Pyright 类型检查         │
+                    └──────────────┬──────────────┘
+                                   ▼
+                    ┌─────────────────────────────┐
+                    │   4. 等待用户确认            │
+                    └──────────────┬──────────────┘
+                                   │
+                        ┌──────────┴──────────┐
+                        ▼                     ▼
+                 用户确认                用户拒绝
+                        │                     │
+                        ▼                     ▼
+              ┌─────────────────┐      ┌──────────┐
+              │   执行 TDD 流程  │      │  修改计划 │
+              └─────────┬───────┘      └──────────┘
+                        │
+                        ▼
+              ┌─────────────────┐
+              │ 5. Pyright 检查  │
+              └─────────┬───────┘
+                        │
+                        ▼
+              ┌─────────────────┐
+              │ 6. 更新需求文档  │
+              │(docs/需求文档.md)│
+              └─────────────────┘
 ```
 
-## Important Notes
+## 执行阶段详解
 
-**CRITICAL**: The planner agent will **NOT** write any code until you explicitly confirm the plan with "yes" or "proceed" or similar affirmative response.
+### 阶段 1：项目上下文分析
 
-If you want changes, respond with:
-- "modify: [your changes]"
-- "different approach: [alternative]"
-- "skip phase 2 and do phase 3 first"
+**必须读取的文档：**
+- `docs/项目架构.md` - 了解目录结构、核心模块、数据流向
+- `docs/项目状态.md` - 了解已完成功能和待办事项
+- `docs/需求文档.md` - 了解现有需求格式和结构
+- `config.py` - 了解项目配置
 
-## Integration with Other Commands
+**分析内容：**
+- 新功能应该放在哪个模块？
+- 需要复用哪些现有组件？
+- 是否需要新增模块或子目录？
 
-After planning:
-- Use `/tdd` to implement with test-driven development
-- Use `/build-fix` if build errors occur
-- Use `/code-review` to review completed implementation
+### 阶段 2：测试目录结构
 
-## Related Agents
+**在 `tests/` 目录下创建对应的测试结构：**
 
-This command invokes the `planner` agent located at:
+```
+tests/
+├── test_<new_module>.py          # 新模块的测试
+├── test_<existing_module>.py     # 修改现有模块时补充测试
+└── fixtures/                     # 测试夹具（如需要）
+    └── <module>_fixtures.py
+```
+
+**命名约定：**
+- 测试文件：`test_<module_name>.py`
+- 测试类：`Test<ClassName>`
+- 测试方法：`test_<scenario>_<expected_result>`
+
+### 阶段 3：编写测试文件
+
+**测试文件结构：**
+
+```python
+"""
+测试 <模块名称>
+
+遵循 TDD 原则：先写测试，后写实现。
+"""
+
+import pytest
+from pathlib import Path
+from src.<module> import <ClassOrFunction>
+
+
+class Test<ClassName>:
+    """测试 <ClassName> 的行为"""
+
+    def setup_method(self):
+        """每个测试前的初始化"""
+        # 创建测试数据、临时文件等
+        pass
+
+    def test_<scenario>_success(self):
+        """测试：<场景描述> - 成功情况"""
+        # Arrange: 准备测试数据
+        # Act: 执行被测试的功能
+        # Assert: 验证结果
+        pass
+
+    def test_<scenario>_with_invalid_input(self):
+        """测试：<场景描述> - 无效输入"""
+        # 应该抛出异常或返回错误
+        with pytest.raises(ValueError):
+            # 调用被测试的功能
+            pass
+
+    def test_<scenario>_edge_case(self):
+        """测试：<场景描述> - 边界情况"""
+        # 空值、空列表、极大值等
+        pass
+```
+
+### 阶段 4：实现功能代码
+
+**遵循顺序：**
+1. 创建/修改 `src/` 下的模块文件
+2. 实现最简单的代码让测试通过
+3. 重构优化（保持测试通过）
+4. 添加文档字符串
+
+### 阶段 5：Pyright 类型检查
+
+**类型检查命令：**
+```bash
+# 检查单个文件
+pyright src/<module>.py
+
+# 检查整个 src 目录
+pyright src/
+```
+
+**修复类型错误直到通过。**
+
+### 阶段 6：更新需求文档
+
+**在功能实现完成后，必须更新 `docs/需求文档.md`**
+
+**更新格式：**
+
+```markdown
+### N. <功能名称>
+- **描述**：[简洁描述功能用途]
+- **优先级**：高/中/低
+- **验收标准**：
+  - [标准 1]
+  - [标准 2]
+  - [标准 3]
+- **状态**：✅ 已完成 (YYYY-MM-DD)
+```
+
+**添加位置：**
+- 新功能：添加到"核心功能需求"末尾
+- 修改现有功能：更新对应需求的验收标准和状态
+
+**更新示例：**
+
+```markdown
+### 7. 批处理功能
+- **描述**：支持批量处理多个视频文件，多线程并发处理
+- **优先级**：中
+- **验收标准**：
+  - 支持目录扫描和指定文件列表
+  - 可配置并发线程数
+  - 支持中断恢复
+  - 生成批量处理汇总报告
+- **状态**：✅ 已完成 (2026-02-27)
+```
+
+## 计划格式模板
+
+```markdown
+# 实施计划：[功能名称]
+
+## 概览
+[2-3 句话描述功能]
+
+## 项目上下文分析
+- **现有模块**：涉及哪些现有组件
+- **新增位置**：新文件放在哪里
+- **依赖关系**：需要导入哪些模块
+
+## 实施步骤（TDD）
+
+### 阶段 1：测试准备
+1. **创建测试目录** `tests/test_<feature>.py`
+2. **编写测试用例**
+   - `test_<功能>_success` - 正常流程
+   - `test_<功能>_invalid_input` - 异常处理
+   - `test_<功能>_edge_case` - 边界情况
+
+### 阶段 2：功能实现
+1. **创建/修改模块** `src/<module>.py`
+2. **实现最简代码** 让测试通过
+3. **代码重构** 优化结构
+
+### 阶段 3：质量检查
+1. **运行测试** `pytest tests/test_<feature>.py -v`
+2. **类型检查** `pyright src/<module>.py`
+3. **修复所有错误**
+
+### 阶段 4：文档更新
+1. **更新 `docs/需求文档.md`**
+   - 添加新功能条目或更新现有需求
+   - 标记完成状态和日期
+
+## 风险评估
+- **高风险**：[描述]
+- **中风险**：[描述]
+- **低风险**：[描述]
+
+## 成功标准
+- [ ] 所有测试通过
+- [ ] Pyright 类型检查通过
+- [ ] 代码覆盖率 ≥ 80%
+- [ ] 需求文档已更新
+- [ ] 符合项目编码规范
+
+**等待确认**：是否按此计划执行？(yes/no/modify)
+```
+
+## 命令示例
+
+```
+User: /plan 添加视频字幕提取功能
+
+Agent:
+# 实施计划：视频字幕提取功能
+
+## 概览
+添加从视频文件中提取字幕（SRT/VTT）的功能，支持自动检测字幕轨道。
+
+## 项目上下文分析
+- **现有模块**：GeminiClient（文件上传）、VideoFileManager（缓存）
+- **新增位置**：`src/subtitle_extractor.py`
+- **依赖关系**：需要 ffmpeg 或 pysubs2 库
+
+## 实施步骤（TDD）
+
+### 阶段 1：测试准备
+1. **创建测试文件** `tests/test_subtitle_extractor.py`
+2. **编写测试用例**：
+   - `test_extract_srt_from_video_success` - 成功提取 SRT
+   - `test_extract_with_no_subtitles` - 无字幕视频
+   - `test_extract_with_invalid_format` - 不支持的格式
+
+### 阶段 2：功能实现
+1. **创建模块** `src/subtitle_extractor.py`
+   - `SubtitleExtractor` 类
+   - `extract()` 方法
+2. **集成到 NoteGenerator**
+
+### 阶段 3：质量检查
+1. 运行测试
+2. Pyright 类型检查
+
+### 阶段 4：文档更新
+1. 更新 `docs/需求文档.md`，添加：
+   ```markdown
+   ### 8. 字幕提取功能
+   - **描述**：从视频文件中提取字幕轨道
+   - **优先级**：中
+   - **验收标准**：
+     - 支持 SRT/VTT 格式
+     - 自动检测字幕轨道
+     - 无字幕时优雅降级
+   - **状态**：✅ 已完成 (YYYY-MM-DD)
+   ```
+
+## 风险评估
+- **高风险**：ffmpeg 依赖的环境配置
+- **中风险**：不同编码的字幕处理
+- **低风险**：缓存集成
+
+## 成功标准
+- [ ] 所有测试通过
+- [ ] Pyright 类型检查通过
+- [ ] 代码覆盖率 ≥ 80%
+- [ ] 需求文档已更新
+
+**等待确认**：是否按此计划执行？(yes/no/modify)
+```
+
+## 重要说明
+
+**工作流程固定顺序：**
+1. ✅ 先读 `docs/项目架构.md`
+2. ✅ 先创建测试目录
+3. ✅ 先编写测试文件
+4. ✅ 再实现功能代码
+5. ✅ Pyright 类型检查
+6. ✅ **最后更新需求文档**
+
+**用户响应选项：**
+- `yes` / `proceed` - 开始执行
+- `modify: [修改意见]` - 修改计划
+- `skip phase X` - 跳过某个阶段
+
+## 与其他命令的配合
+
+| 命令 | 用途 |
+|------|------|
+| `/plan` | 规划 + TDD 执行 + 更新需求文档 |
+| `/tdd` | 纯 TDD 工作流 |
+| `/update-status` | 更新项目状态和架构文档 |
+| `/code-review` | 代码审查 |
+
+## 相关 Agent
+
+此命令调用的 `planner` agent 位于：
 `~/.claude/agents/planner.md`
