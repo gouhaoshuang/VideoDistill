@@ -269,5 +269,7 @@ Claude Code 是 Anthropic 官方推出的 CLI 工具，专为软件工程任务�
         assert "API Key" in result.chapters[1].description
 
 
+# Hook 测试：添加此注释以触发 Stop hook
+# Stop hook 会在响应完成后自动运行 pyright 检查 src/ 目录
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

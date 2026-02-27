@@ -1,10 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -c:*)",
+      "Bash(*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(conda run -n videodistill pip install pyright)",
+      "Bash(conda run -n videodistill pyright src/batch/batch_processor.py)",
+      "Bash(conda run -n videodistill black --version)",
+      "Bash(conda run -n videodistill black --check src/batch/batch_processor.py)",
+      "Read(//d/code/everything-claude-code/**)"
     ]
   }
 }

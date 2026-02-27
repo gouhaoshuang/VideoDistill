@@ -7,36 +7,42 @@ paths:
 
 > 本文件扩展了 [common/coding-style.md](../common/coding-style.md)，包含 Python 特定内容。
 
-## 标准
 
-- 遵循 **PEP 8** 规范
-- 在所有函数签名上使用**类型注解**
-
-## 不可变性
-
-优先使用不可变数据结构：
-
-```python
-from dataclasses import dataclass
-
-@dataclass(frozen=True)
-class User:
-    name: str
-    email: str
-
-from typing import NamedTuple
-
-class Point(NamedTuple):
-    x: float
-    y: float
-```
 
 ## 格式化
 
-- **black** 用于代码格式化
-- **isort** 用于导入排序
-- **ruff** 用于代码检查
+**提交代码前必须运行格式化**，确保代码风格一致：
 
-## 参考
+```bash
+# 检查格式（不修改文件）
+conda run -n videodistill black --check <文件或目录>
 
-查看技能：`python-patterns` 了解全面的 Python 惯用法和模式。
+# 格式化（修改文件）
+conda run -n videodistill black <文件或目录>
+
+# 显示差异（不修改）
+conda run -n videodistill black --diff <文件或目录>
+```
+
+
+## 类型检查
+
+**提交代码前必须运行类型检查**，确保无类型错误：
+
+```bash
+# 首次使用：安装 pyright
+conda run -n videodistill pip install pyright
+
+# 检查单个文件
+conda run -n videodistill pyright <文件路径>
+
+# 检查整个项目
+conda run -n videodistill pyright src/
+```
+
+
+### 环境说明
+
+- **环境**: `videodistill` conda 环境
+- **工具**: pyright（Pylance 底层引擎，结果与 VSCode 一致）
+- **目标**: 0 errors, 0 warnings

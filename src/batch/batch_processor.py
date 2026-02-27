@@ -5,7 +5,6 @@
 支持中断恢复、进度回调和批量汇总报告。
 """
 
-import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
@@ -17,8 +16,12 @@ from ..file_utils import VideoFileManager
 from .task_queue import BatchTaskQueue, TaskStatus, VideoTask
 
 
+
 class BatchProcessor:
-    """批量视频笔记生成器"""
+    """批量视频笔记生成器
+
+    支持多线程并发处理视频文件。
+    """
 
     def __init__(
         self,
@@ -157,7 +160,8 @@ class BatchProcessor:
                 )
             finally:
                 try:
-                    client.delete_file(video_file.name)
+                    if video_file.name is not None:
+                        client.delete_file(video_file.name)
                 except Exception:
                     pass
 
@@ -172,8 +176,8 @@ class BatchProcessor:
         lines = [
             f"# 批量处理汇总 — {datetime.now().strftime('%Y-%m-%d %H:%M')}",
             "",
-            f"| 视频文件 | 状态 | 笔记 |",
-            f"|---------|------|------|",
+            "| 视频文件 | 状态 | 笔记 |",
+            "|---------|------|------|",
         ]
 
         for task in queue.tasks:
@@ -183,7 +187,9 @@ class BatchProcessor:
                 lines.append(f"| {name} | ✅ 完成 | [{rel}](./{rel}/final_notes.md) |")
             elif task.status == TaskStatus.SKIPPED:
                 rel = Path(task.output_dir).name if task.output_dir else "-"
-                lines.append(f"| {name} | ⏭️ 跳过（已缓存） | [{rel}](./{rel}/final_notes.md) |")
+                lines.append(
+                    f"| {name} | ⏭️ 跳过（已缓存） | [{rel}](./{rel}/final_notes.md) |"
+                )
             elif task.status == TaskStatus.FAILED:
                 lines.append(f"| {name} | ❌ 失败 | {task.error or ''} |")
             else:
