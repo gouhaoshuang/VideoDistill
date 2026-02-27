@@ -27,7 +27,7 @@ def test_video_note_generation():
 
     # 检查视频文件是否存在
     if not os.path.exists(video_path):
-        print(f"\n❌ 错误: 视频文件不存在")
+        print("\n❌ 错误: 视频文件不存在")
         print(f"   路径: {video_path}")
         return False
 
@@ -57,7 +57,7 @@ def test_video_note_generation():
         print("=" * 60)
 
         video_file = client.upload_video(video_path)
-        print(f"✅ 视频上传成功")
+        print("✅ 视频上传成功")
         print(f"   文件名: {video_file.name}")
         print(f"   URI: {video_file.uri}")
 
@@ -77,8 +77,7 @@ def test_video_note_generation():
             print(f"\r  [{bar}] {progress:.1f}% - {message}", end="", flush=True)
 
         notes = generator.generate_all_notes(
-            video_file,
-            progress_callback=progress_callback
+            video_file, progress_callback=progress_callback
         )
 
         print("\n✅ 笔记生成成功！")
@@ -120,6 +119,7 @@ def test_video_note_generation():
     except Exception as e:
         print(f"\n❌ 测试失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -144,10 +144,7 @@ def test_simple_api_call():
 
         # 测试简单的文本生成
         print("\n正在测试文本生成...")
-        response = client.generate_content(
-            "请用一句话介绍 Gemini AI",
-            temperature=0.7
-        )
+        response = client.generate_content("请用一句话介绍 Gemini AI", temperature=0.7)
         print(f"✅ API 响应: {response[:100]}...")
 
         return True
@@ -165,7 +162,7 @@ if __name__ == "__main__":
         "--test",
         choices=["api", "video"],
         default="api",
-        help="测试类型: api (API连接测试) 或 video (视频笔记生成测试)"
+        help="测试类型: api (API连接测试) 或 video (视频笔记生成测试)",
     )
 
     args = parser.parse_args()

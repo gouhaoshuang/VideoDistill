@@ -11,7 +11,7 @@ from pathlib import Path
 # 添加项目根目录到 Python 路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.outline_parser import OutlineParser, Chapter, ParseResult
+from src.outline_parser import OutlineParser
 
 
 class TestOutlineParser:
@@ -188,13 +188,15 @@ class TestOutlineParser:
     def test_chinese_number_conversion(self):
         """测试中文数字转换"""
         # 一到十
-        for i, cn in enumerate(['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'], 1):
-            assert self.parser._parse_chapter_number(cn, '') == i
+        for i, cn in enumerate(
+            ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"], 1
+        ):
+            assert self.parser._parse_chapter_number(cn, "") == i
 
     def test_arabic_number_priority(self):
         """测试阿拉伯数字优先级"""
         # 当同时提供中文和阿拉伯数字时，优先使用阿拉伯数字
-        assert self.parser._parse_chapter_number('十', '5') == 5
+        assert self.parser._parse_chapter_number("十", "5") == 5
 
     # ===== to_segment_list 转换测试 =====
 
@@ -212,10 +214,10 @@ class TestOutlineParser:
         segments = self.parser.to_segment_list(result)
 
         assert len(segments) == 2
-        assert segments[0]['id'] == 1
-        assert segments[0]['title'] == '第一段'
-        assert segments[1]['id'] == 2
-        assert segments[1]['title'] == '第二段'
+        assert segments[0]["id"] == 1
+        assert segments[0]["title"] == "第一段"
+        assert segments[1]["id"] == 2
+        assert segments[1]["title"] == "第二段"
 
     # ===== 文件解析测试 =====
 
@@ -227,7 +229,7 @@ class TestOutlineParser:
 ## 第一章：文件内容
 这是从文件读取的内容。
 """
-        outline_file.write_text(outline_content, encoding='utf-8')
+        outline_file.write_text(outline_content, encoding="utf-8")
 
         result = self.parser.parse_file(outline_file)
 

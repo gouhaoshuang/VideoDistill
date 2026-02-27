@@ -7,13 +7,12 @@
 """
 
 from typing import List, Dict, Optional, Callable
-from pathlib import Path
 from .gemini_client import GeminiClient
 from .prompt_templates import (
     OUTLINE_PROMPT,
     SEGMENT_PROMPT,
     DIRECT_PROMPT,
-    SYSTEM_INSTRUCTION
+    SYSTEM_INSTRUCTION,
 )
 from .file_utils import VideoFileManager
 from .outline_parser import OutlineParser
@@ -24,14 +23,14 @@ class NoteGenerator:
 
     # 生成模式枚举
     MODE_SEGMENTED = "segmented"  # 分段生成（适合长视频）
-    MODE_DIRECT = "direct"        # 直接生成（适合短视频）
+    MODE_DIRECT = "direct"  # 直接生成（适合短视频）
 
     def __init__(
         self,
         gemini_client: GeminiClient,
         file_manager: Optional[VideoFileManager] = None,
         output_dir: str = "outputs",
-        enable_cache: bool = True
+        enable_cache: bool = True,
     ):
         """
         初始化笔记生成器
@@ -65,7 +64,7 @@ class NoteGenerator:
             OUTLINE_PROMPT,
             file=video_file,
             system_instruction=SYSTEM_INSTRUCTION,
-            temperature=0.5
+            temperature=0.5,
         )
         print("大纲生成完成")
         return outline
@@ -89,11 +88,7 @@ class NoteGenerator:
         print(f"解析出 {len(segments)} 个分段")
         return segments
 
-    def generate_segment_note(
-        self,
-        outline: str,
-        segment: Dict
-    ) -> str:
+    def generate_segment_note(self, outline: str, segment: Dict) -> str:
         """
         为单个段落生成笔记
 
@@ -108,15 +103,13 @@ class NoteGenerator:
 
         prompt = SEGMENT_PROMPT.format(
             outline=outline,
-            segment_id=segment['id'],
-            segment_title=segment['title'],
-            segment_description=segment.get('description', '')
+            segment_id=segment["id"],
+            segment_title=segment["title"],
+            segment_description=segment.get("description", ""),
         )
 
         note = self.client.generate_content(
-            prompt,
-            system_instruction=SYSTEM_INSTRUCTION,
-            temperature=0.6
+            prompt, system_instruction=SYSTEM_INSTRUCTION, temperature=0.6
         )
 
         return note
@@ -136,7 +129,7 @@ class NoteGenerator:
             DIRECT_PROMPT,
             file=video_file,
             system_instruction=SYSTEM_INSTRUCTION,
-            temperature=0.6
+            temperature=0.6,
         )
         print("笔记生成完成")
         return note
@@ -172,7 +165,7 @@ class NoteGenerator:
         video_path: str,
         original_name: str,
         mode: str = MODE_SEGMENTED,
-        progress_callback: Optional[Callable] = None
+        progress_callback: Optional[Callable] = None,
     ) -> str:
         """
         生成完整笔记的主流程，支持缓存和断点续传
@@ -188,7 +181,9 @@ class NoteGenerator:
             完整的 Markdown 笔记
         """
         # 获取视频输出目录
-        self.current_video_dir = self.file_manager.get_video_dir(video_path, original_name)
+        self.current_video_dir = self.file_manager.get_video_dir(
+            video_path, original_name
+        )
 
         def report_progress(current: int, total: int, message: str):
             if progress_callback:
@@ -198,12 +193,12 @@ class NoteGenerator:
         if mode == self.MODE_DIRECT:
             return self._generate_direct_mode(video_file, progress_callback)
         else:
-            return self._generate_segmented_mode(video_file, video_path, original_name, progress_callback)
+            return self._generate_segmented_mode(
+                video_file, video_path, original_name, progress_callback
+            )
 
     def _generate_direct_mode(
-        self,
-        video_file,
-        progress_callback: Optional[Callable] = None
+        self, video_file, progress_callback: Optional[Callable] = None
     ) -> str:
         """
         直接生成模式
@@ -215,6 +210,7 @@ class NoteGenerator:
         Returns:
             完整的 Markdown 笔记
         """
+
         def report_progress(current: int, total: int, message: str):
             if progress_callback:
                 progress_callback(current, total, message)
@@ -243,7 +239,7 @@ class NoteGenerator:
         video_file,
         video_path: str,
         original_name: str,
-        progress_callback: Optional[Callable] = None
+        progress_callback: Optional[Callable] = None,
     ) -> str:
         """
         分段生成模式
@@ -257,6 +253,7 @@ class NoteGenerator:
         Returns:
             完整的 Markdown 笔记
         """
+
         def report_progress(current: int, total: int, message: str):
             if progress_callback:
                 progress_callback(current, total, message)
@@ -286,20 +283,24 @@ class NoteGenerator:
         # 3. 检查并生成每段笔记（支持断点续传）
         segment_notes = []
         total_segments = len(self.current_segments)
-        cached_segment_ids = self.file_manager.get_cached_segments(self.current_video_dir)
+        cached_segment_ids = self.file_manager.get_cached_segments(
+            self.current_video_dir
+        )
 
         for i, segment in enumerate(self.current_segments):
-            segment_id = segment['id']
+            segment_id = segment["id"]
 
             # 检查是否有缓存
             if self.enable_cache and segment_id in cached_segment_ids:
-                cached_note = self.file_manager.load_segment_note(self.current_video_dir, segment_id)
+                cached_note = self.file_manager.load_segment_note(
+                    self.current_video_dir, segment_id
+                )
                 if cached_note:
                     segment_notes.append(cached_note)
                     report_progress(
                         3 + i,
                         3 + total_segments,
-                        f"✅ 从缓存加载第 {i+1}/{total_segments} 段: {segment['title']}"
+                        f"✅ 从缓存加载第 {i+1}/{total_segments} 段: {segment['title']}",
                     )
                     continue
 
@@ -307,14 +308,16 @@ class NoteGenerator:
             report_progress(
                 3 + i,
                 3 + total_segments,
-                f"正在生成第 {i+1}/{total_segments} 段笔记: {segment['title']}"
+                f"正在生成第 {i+1}/{total_segments} 段笔记: {segment['title']}",
             )
 
             note = self.generate_segment_note(self.current_outline, segment)
             segment_notes.append(note)
 
             # 保存到缓存
-            self.file_manager.save_segment_note(self.current_video_dir, segment_id, note)
+            self.file_manager.save_segment_note(
+                self.current_video_dir, segment_id, note
+            )
 
         # 4. 检查并合并笔记
         if self.enable_cache:
@@ -324,18 +327,14 @@ class NoteGenerator:
                 return cached_final
 
         report_progress(
-            3 + total_segments,
-            3 + total_segments + 1,
-            "正在合并所有笔记..."
+            3 + total_segments, 3 + total_segments + 1, "正在合并所有笔记..."
         )
 
         merged_notes = self.merge_notes(segment_notes, self.current_segments)
         self.file_manager.save_final_notes(self.current_video_dir, merged_notes)
 
         report_progress(
-            100,
-            100,
-            f"✅ 笔记生成完成！已保存到: {self.current_video_dir}"
+            100, 100, f"✅ 笔记生成完成！已保存到: {self.current_video_dir}"
         )
 
         return merged_notes

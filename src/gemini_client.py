@@ -28,8 +28,13 @@ class GeminiClient:
         self.client = genai.Client(api_key=self.api_key)
         self.model = "gemini-2.0-flash"
 
-    def upload_video(self, video_path: str, wait_for_ready: bool = True, timeout: int = 300,
-                     max_retries: int = 3):
+    def upload_video(
+        self,
+        video_path: str,
+        wait_for_ready: bool = True,
+        timeout: int = 300,
+        max_retries: int = 3,
+    ):
         """
         上传视频文件到 Gemini Files API，失败时指数退避重试。
 
@@ -45,14 +50,17 @@ class GeminiClient:
         last_exc = None
         for attempt in range(1, max_retries + 1):
             try:
-                print(f"正在上传视频: {video_path}" + (f" (第{attempt}次)" if attempt > 1 else ""))
+                print(
+                    f"正在上传视频: {video_path}"
+                    + (f" (第{attempt}次)" if attempt > 1 else "")
+                )
                 file = self.client.files.upload(file=video_path)
                 print(f"文件已上传: {file.name}")
                 break
             except Exception as e:
                 last_exc = e
                 if attempt < max_retries:
-                    wait = 2 ** attempt  # 2, 4, 8 秒
+                    wait = 2**attempt  # 2, 4, 8 秒
                     print(f"上传失败（{e}），{wait}s 后重试...")
                     time.sleep(wait)
                 else:
@@ -118,7 +126,7 @@ class GeminiClient:
         file=None,
         system_instruction: Optional[str] = None,
         temperature: float = 0.7,
-        max_retries: int = 5
+        max_retries: int = 5,
     ) -> str:
         """
         生成内容（带自动重试）
@@ -148,9 +156,7 @@ class GeminiClient:
         for attempt in range(max_retries):
             try:
                 response = self.client.models.generate_content(
-                    model=self.model,
-                    contents=contents,
-                    config=config
+                    model=self.model, contents=contents, config=config
                 )
                 return response.text
 
@@ -170,8 +176,10 @@ class GeminiClient:
                 )
                 if is_retryable:
                     if attempt < max_retries - 1:
-                        wait_time = min(2 ** attempt, 60)
-                        print(f"  请求失败（{type(e).__name__}），等待 {wait_time}s 后重试... ({attempt + 1}/{max_retries})")
+                        wait_time = min(2**attempt, 60)
+                        print(
+                            f"  请求失败（{type(e).__name__}），等待 {wait_time}s 后重试... ({attempt + 1}/{max_retries})"
+                        )
                         time.sleep(wait_time)
                         continue
                     else:
@@ -184,7 +192,7 @@ class GeminiClient:
         prompt: str,
         file=None,
         system_instruction: Optional[str] = None,
-        temperature: float = 0.7
+        temperature: float = 0.7,
     ):
         """
         流式生成内容
@@ -210,9 +218,7 @@ class GeminiClient:
             config.system_instruction = system_instruction
 
         for chunk in self.client.models.generate_content_stream(
-            model=self.model,
-            contents=contents,
-            config=config
+            model=self.model, contents=contents, config=config
         ):
             yield chunk.text
 

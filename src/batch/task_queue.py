@@ -5,7 +5,7 @@
 """
 
 import json
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -13,18 +13,18 @@ from typing import List, Optional
 
 
 class TaskStatus(str, Enum):
-    PENDING = "pending"    # 等待处理
-    RUNNING = "running"    # 处理中
-    DONE = "done"          # 完成
-    FAILED = "failed"      # 失败（可重试）
-    SKIPPED = "skipped"    # 跳过（已有缓存）
+    PENDING = "pending"  # 等待处理
+    RUNNING = "running"  # 处理中
+    DONE = "done"  # 完成
+    FAILED = "failed"  # 失败（可重试）
+    SKIPPED = "skipped"  # 跳过（已有缓存）
 
 
 @dataclass
 class VideoTask:
     video_path: str
-    original_name: Optional[str] = None   # 原始中文文件名
-    mode: str = "direct"                   # 生成模式: direct | segmented
+    original_name: Optional[str] = None  # 原始中文文件名
+    mode: str = "direct"  # 生成模式: direct | segmented
     status: TaskStatus = TaskStatus.PENDING
     output_dir: Optional[str] = None
     error: Optional[str] = None
@@ -58,11 +58,13 @@ class BatchTaskQueue:
         """添加视频任务列表，支持 str 或 dict(path, original_name, mode)"""
         for item in video_items:
             if isinstance(item, dict):
-                self.tasks.append(VideoTask(
-                    video_path=item["path"],
-                    original_name=item.get("original_name"),
-                    mode=item.get("mode", "direct"),
-                ))
+                self.tasks.append(
+                    VideoTask(
+                        video_path=item["path"],
+                        original_name=item.get("original_name"),
+                        mode=item.get("mode", "direct"),
+                    )
+                )
             else:
                 self.tasks.append(VideoTask(video_path=item))
         self.save()

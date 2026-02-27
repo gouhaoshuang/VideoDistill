@@ -29,9 +29,11 @@ class VideoFileManager:
 
         # 使用文件名和大小生成hash
         hash_input = f"{path.name}_{file_size}"
-        return hashlib.md5(hash_input.encode('utf-8')).hexdigest()[:12]
+        return hashlib.md5(hash_input.encode("utf-8")).hexdigest()[:12]
 
-    def get_video_dir(self, file_path: str, original_name: Optional[str] = None) -> Path:
+    def get_video_dir(
+        self, file_path: str, original_name: Optional[str] = None
+    ) -> Path:
         """
         获取视频对应的输出目录，同一视频（相同 hash）复用已有目录。
 
@@ -56,7 +58,9 @@ class VideoFileManager:
 
         return video_dir
 
-    def _save_metadata(self, video_dir: Path, file_path: str, original_name: Optional[str] = None):
+    def _save_metadata(
+        self, video_dir: Path, file_path: str, original_name: Optional[str] = None
+    ):
         """保存视频元数据"""
         metadata_file = video_dir / "metadata.json"
 
@@ -71,7 +75,7 @@ class VideoFileManager:
             "source_path": file_path,
         }
 
-        with open(metadata_file, 'w', encoding='utf-8') as f:
+        with open(metadata_file, "w", encoding="utf-8") as f:
             json.dump(metadata, f, ensure_ascii=False, indent=2)
 
     def get_temp_video_path(self, file_path: str, temp_dir: str = "temp") -> Path:
@@ -90,28 +94,28 @@ class VideoFileManager:
     def save_outline(self, video_dir: Path, outline: str):
         """保存大纲到文件"""
         outline_file = video_dir / "outline.md"
-        with open(outline_file, 'w', encoding='utf-8') as f:
+        with open(outline_file, "w", encoding="utf-8") as f:
             f.write(outline)
 
     def load_outline(self, video_dir: Path) -> Optional[str]:
         """从缓存加载大纲"""
         outline_file = video_dir / "outline.md"
         if outline_file.exists():
-            with open(outline_file, 'r', encoding='utf-8') as f:
+            with open(outline_file, "r", encoding="utf-8") as f:
                 return f.read()
         return None
 
     def save_segment_note(self, video_dir: Path, segment_id: int, note: str):
         """保存单个分段的笔记"""
         segment_file = video_dir / f"segment_{segment_id:02d}.md"
-        with open(segment_file, 'w', encoding='utf-8') as f:
+        with open(segment_file, "w", encoding="utf-8") as f:
             f.write(note)
 
     def load_segment_note(self, video_dir: Path, segment_id: int) -> Optional[str]:
         """从缓存加载单个分段笔记"""
         segment_file = video_dir / f"segment_{segment_id:02d}.md"
         if segment_file.exists():
-            with open(segment_file, 'r', encoding='utf-8') as f:
+            with open(segment_file, "r", encoding="utf-8") as f:
                 return f.read()
         return None
 
@@ -130,28 +134,28 @@ class VideoFileManager:
     def save_direct_note(self, video_dir: Path, note: str):
         """保存直接生成的笔记"""
         direct_note_file = video_dir / "direct_note.md"
-        with open(direct_note_file, 'w', encoding='utf-8') as f:
+        with open(direct_note_file, "w", encoding="utf-8") as f:
             f.write(note)
 
     def load_direct_note(self, video_dir: Path) -> Optional[str]:
         """从缓存加载直接生成的笔记"""
         direct_note_file = video_dir / "direct_note.md"
         if direct_note_file.exists():
-            with open(direct_note_file, 'r', encoding='utf-8') as f:
+            with open(direct_note_file, "r", encoding="utf-8") as f:
                 return f.read()
         return None
 
     def save_final_notes(self, video_dir: Path, notes: str):
         """保存最终合并的笔记"""
         notes_file = video_dir / "final_notes.md"
-        with open(notes_file, 'w', encoding='utf-8') as f:
+        with open(notes_file, "w", encoding="utf-8") as f:
             f.write(notes)
 
     def load_final_notes(self, video_dir: Path) -> Optional[str]:
         """从缓存加载最终笔记"""
         notes_file = video_dir / "final_notes.md"
         if notes_file.exists():
-            with open(notes_file, 'r', encoding='utf-8') as f:
+            with open(notes_file, "r", encoding="utf-8") as f:
                 return f.read()
         return None
 
@@ -159,7 +163,7 @@ class VideoFileManager:
         """获取视频的元数据信息"""
         metadata_file = video_dir / "metadata.json"
         if metadata_file.exists():
-            with open(metadata_file, 'r', encoding='utf-8') as f:
+            with open(metadata_file, "r", encoding="utf-8") as f:
                 return json.load(f)
         return None
 
@@ -175,16 +179,18 @@ class VideoFileManager:
                     has_outline = (video_dir / "outline.md").exists()
                     has_final = (video_dir / "final_notes.md").exists()
 
-                    videos.append({
-                        "dir_name": video_dir.name,
-                        "path": str(video_dir),
-                        "original_name": info.get("original_name"),
-                        "created_at": info.get("created_at"),
-                        "has_outline": has_outline,
-                        "has_final": has_final,
-                        "cached_segments": cached_segments,
-                        "total_segments": len(cached_segments)
-                    })
+                    videos.append(
+                        {
+                            "dir_name": video_dir.name,
+                            "path": str(video_dir),
+                            "original_name": info.get("original_name"),
+                            "created_at": info.get("created_at"),
+                            "has_outline": has_outline,
+                            "has_final": has_final,
+                            "cached_segments": cached_segments,
+                            "total_segments": len(cached_segments),
+                        }
+                    )
 
         # 按创建时间倒序排列
         videos.sort(key=lambda x: x.get("created_at", ""), reverse=True)

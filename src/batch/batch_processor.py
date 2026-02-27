@@ -16,7 +16,6 @@ from ..file_utils import VideoFileManager
 from .task_queue import BatchTaskQueue, TaskStatus, VideoTask
 
 
-
 class BatchProcessor:
     """批量视频笔记生成器
 

@@ -16,7 +16,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.batch.batch_processor import BatchProcessor
-from config import AVAILABLE_MODELS, DEFAULT_MODEL, DEFAULT_GENERATION_MODE, GENERATION_MODES, SUPPORTED_VIDEO_FORMATS
+from config import (
+    AVAILABLE_MODELS,
+    DEFAULT_MODEL,
+    DEFAULT_GENERATION_MODE,
+    GENERATION_MODES,
+    SUPPORTED_VIDEO_FORMATS,
+)
 
 
 def collect_videos(inputs: list[str]) -> list[str]:
@@ -52,7 +58,8 @@ def main():
     )
 
     parser.add_argument(
-        "--input", "-i",
+        "--input",
+        "-i",
         nargs="+",
         metavar="PATH",
         help="视频文件或目录（可多个）",
@@ -63,7 +70,8 @@ def main():
         help="恢复中断的批量任务目录",
     )
     parser.add_argument(
-        "--mode", "-m",
+        "--mode",
+        "-m",
         choices=list(GENERATION_MODES.keys()),
         default=DEFAULT_GENERATION_MODE,
         help=f"生成模式（默认: {DEFAULT_GENERATION_MODE}）",
@@ -75,13 +83,15 @@ def main():
         help=f"AI 模型（默认: {DEFAULT_MODEL}）",
     )
     parser.add_argument(
-        "--workers", "-w",
+        "--workers",
+        "-w",
         type=int,
         default=2,
         help="并发线程数（默认: 2）",
     )
     parser.add_argument(
-        "--output", "-o",
+        "--output",
+        "-o",
         default="outputs",
         help="输出根目录（默认: outputs）",
     )
@@ -127,7 +137,9 @@ def main():
             print("❌ 未找到任何视频文件")
             sys.exit(1)
 
-        print(f"▶ 开始批量处理 {len(videos)} 个视频（模式: {GENERATION_MODES[args.mode]}，并发: {args.workers}）")
+        print(
+            f"▶ 开始批量处理 {len(videos)} 个视频（模式: {GENERATION_MODES[args.mode]}，并发: {args.workers}）"
+        )
         for v in videos:
             print(f"   • {v}")
         print()
@@ -144,6 +156,7 @@ def main():
         print("\n失败任务:")
         for t in queue.tasks:
             from src.batch.task_queue import TaskStatus
+
             if t.status == TaskStatus.FAILED:
                 print(f"  ❌ {Path(t.video_path).name}: {t.error}")
         sys.exit(1)

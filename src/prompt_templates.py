@@ -17,7 +17,7 @@ class PromptLoader:
         """加载指定的提示词文件"""
         prompt_file = self.prompts_dir / f"{prompt_name}.txt"
         if prompt_file.exists():
-            with open(prompt_file, 'r', encoding='utf-8') as f:
+            with open(prompt_file, "r", encoding="utf-8") as f:
                 return f.read().strip()
         else:
             raise FileNotFoundError(f"提示词文件不存在: {prompt_file}")
@@ -42,18 +42,23 @@ class PromptLoader:
 # 全局加载器实例
 _loader = PromptLoader()
 
+
 # 保持向后兼容的导出
 def get_outline_prompt() -> str:
     return _loader.outline_prompt
 
+
 def get_segment_prompt() -> str:
     return _loader.segment_prompt
+
 
 def get_direct_prompt() -> str:
     return _loader.direct_prompt
 
+
 def get_system_instruction() -> str:
     return _loader.system_instruction
+
 
 # 向后兼容：旧代码可以直接使用的常量
 OUTLINE_PROMPT = get_outline_prompt()
