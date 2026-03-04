@@ -3,3 +3,7 @@ streamlit
 black
 isort
 ruff
+
+# 测试依赖
+pytest
+pytest-cov
