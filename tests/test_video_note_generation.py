@@ -11,8 +11,8 @@ from pathlib import Path
 # 添加项目根目录到 Python 路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.gemini_client import GeminiClient
-from src.note_generator import NoteGenerator
+from src.api.gemini_client import GeminiClient
+from src.core.note_generator import NoteGenerator
 
 
 def test_video_note_generation():

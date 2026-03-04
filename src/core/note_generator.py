@@ -7,15 +7,16 @@
 """
 
 from typing import List, Dict, Optional, Callable
-from .gemini_client import GeminiClient
-from .prompt_templates import (
+
+from src.api.gemini_client import GeminiClient
+from src.config.prompt_templates import (
     OUTLINE_PROMPT,
     SEGMENT_PROMPT,
     DIRECT_PROMPT,
     SYSTEM_INSTRUCTION,
 )
-from .file_utils import VideoFileManager
-from .outline_parser import OutlineParser
+from src.storage.file_utils import VideoFileManager
+from src.core.outline_parser import OutlineParser
 
 
 class NoteGenerator:

@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from src.file_utils import VideoFileManager
+from src.storage.file_utils import VideoFileManager
 
 
 class UploadedFileHandler:

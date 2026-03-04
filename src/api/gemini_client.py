@@ -7,12 +7,32 @@ Gemini API 客户端封装
 import os
 import time
 from typing import Optional, List
+from contextvars import ContextVar
 from google import genai
 from google.genai import types
+
+# 上下文变量：用于传递当前处理的视频名称（用于日志前缀）
+_current_video_name: ContextVar[Optional[str]] = ContextVar("_current_video_name", default=None)
 
 
 class GeminiClient:
     """Gemini AI API 客户端"""
+
+    @staticmethod
+    def set_video_context(name: Optional[str]):
+        """设置当前处理的视频名称（用于日志前缀）"""
+        _current_video_name.set(name)
+
+    @staticmethod
+    def get_video_context() -> Optional[str]:
+        """获取当前处理的视频名称"""
+        return _current_video_name.get()
+
+    @staticmethod
+    def _log_prefix() -> str:
+        """获取日志前缀"""
+        name = _current_video_name.get()
+        return f"[{name}] " if name else ""
 
     def __init__(self, api_key: Optional[str] = None):
         """
@@ -153,12 +173,17 @@ class GeminiClient:
             config.system_instruction = system_instruction
 
         # 重试逻辑：处理 429 速率限制错误
+        last_error = None
         for attempt in range(max_retries):
             try:
                 response = self.client.models.generate_content(
                     model=self.model, contents=contents, config=config
                 )
-                return response.text
+                result = response.text
+                # 验证返回值非空
+                if not result or not result.strip():
+                    raise ValueError("API 返回空内容")
+                return result
 
             except Exception as e:
                 error_str = str(e)
@@ -177,13 +202,16 @@ class GeminiClient:
                 if is_retryable:
                     if attempt < max_retries - 1:
                         wait_time = min(2**attempt, 60)
+                        prefix = self._log_prefix()
                         print(
-                            f"  请求失败（{type(e).__name__}），等待 {wait_time}s 后重试... ({attempt + 1}/{max_retries})"
+                            f"{prefix}请求失败（{type(e).__name__}），等待 {wait_time}s 后重试... ({attempt + 1}/{max_retries})"
                         )
                         time.sleep(wait_time)
+                        print("重新开始~")
                         continue
                     else:
-                        raise Exception(f"达到最大重试次数，请求失败: {error_str}")
+                        prefix = self._log_prefix()
+                        raise Exception(f"{prefix}达到最大重试次数，请求失败: {error_str}")
                 else:
                     raise
 

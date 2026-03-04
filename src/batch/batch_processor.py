@@ -10,9 +10,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable, List, Optional
 
-from ..gemini_client import GeminiClient
-from ..note_generator import NoteGenerator
-from ..file_utils import VideoFileManager
+from ..api.gemini_client import GeminiClient
+from ..core.note_generator import NoteGenerator
+from ..storage.file_utils import VideoFileManager
 from .task_queue import BatchTaskQueue, TaskStatus, VideoTask
 
 
@@ -129,6 +129,8 @@ class BatchProcessor:
         try:
             client = GeminiClient(api_key=self.api_key)
             client.model = self.model
+            # 设置日志上下文，使用原始文件名作为标识
+            GeminiClient.set_video_context(original_name)
 
             file_manager = VideoFileManager(str(self.output_dir))
 
@@ -169,6 +171,9 @@ class BatchProcessor:
         except Exception as e:
             queue.mark_failed(task, str(e))
             raise
+        finally:
+            # 清除日志上下文
+            GeminiClient.set_video_context(None)
 
     def _write_summary(self, queue: BatchTaskQueue):
         """生成 batch_summary.md 汇总报告"""

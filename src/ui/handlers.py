@@ -9,9 +9,9 @@ import pandas as pd
 from pathlib import Path
 from typing import Dict, Optional
 
-from src.gemini_client import GeminiClient
-from src.note_generator import NoteGenerator
-from src.file_utils import VideoFileManager
+from src.api.gemini_client import GeminiClient
+from src.core.note_generator import NoteGenerator
+from src.storage.file_utils import VideoFileManager
 from src.batch import BatchProcessor
 from src.utils.file_handler import UploadedFileHandler
 from config import GENERATION_MODES
